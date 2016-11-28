@@ -1,5 +1,8 @@
 class Stock < ActiveRecord::Base
 
+	has_many :user_stocks
+	has_many :users, through: :user_stocks
+
 	def self.find_by_ticker(ticker_symbol)
 		where(ticker: ticker_symbol).first
 	end
@@ -15,7 +18,7 @@ class Stock < ActiveRecord::Base
 	end
 
 	def price
-		closing_price = StockQuote::Stock.quote(ticker).close
+		closing_price = StockQuote::Stock.quote(ticker).open #the close method doesn't work anymore...
 		return "#{closing_price} (Closing)" if closing_price
 
 		opening_price = StockQuote::Stock.quote(ticker).open
