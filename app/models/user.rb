@@ -8,7 +8,7 @@ class User < ActiveRecord::Base
   has_many :stocks, through: :user_stocks
 
   has_many :friendships
-  has_many :friends, through: :frienships
+  has_many :friends, through: :friendships
 
   def full_name
     return "#{first_name} #{last_name}".strip if (first_name || last_name)
@@ -27,5 +27,37 @@ class User < ActiveRecord::Base
   	stock = Stock.find_by_ticker(ticker_symbol)
   	return false unless stock
   	user_stocks.where(stock_id: stock.id).exists?
+  end
+
+  def not_friends_with?(friend_id)
+    friendships.where(friend_id: friend_id).count < 1 #if the friend_id doesn't show up in the list, they aren't friends
+  end
+
+  def except_current_user(users)
+    users.reject { |user| user.id == self.id }
+  end
+
+  def self.search(param)#this is referenced in the search action in users_controller
+    return User.none if param.blank?
+
+    param.strip!
+    param.downcase!
+    (first_name_matches(param) + last_name_matches(param) + email_matches(param)).uniq
+  end
+
+  def self.first_name_matches(param)
+    matches('first_name', param)
+  end
+
+  def self.last_name_matches(param)
+    matches('last_name', param)
+  end
+
+  def self.email_matches(param)
+    matches('email', param)
+  end
+
+  def self.matches(field_name, param)
+    where("lower(#{field_name}) like ?", "%#{param}%")
   end
 end
